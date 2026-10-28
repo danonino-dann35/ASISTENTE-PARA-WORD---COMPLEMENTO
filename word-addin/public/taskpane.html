@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente Editorial para Word</title>
+    <!-- Office.js library -->
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+    <!-- SheetJS para lectura de Excel client-side -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="taskpane.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <img src="assets/icon-32.png" alt="Logo" class="header-logo" width="30" height="30" />
+                <div>
+                    <h1>Asistente Editorial</h1>
+                    <span class="sub-badge" id="modelBadge">gemini-3.8-flash</span>
+                </div>
+            </div>
+            <div class="header-status" id="serverStatusIndicator" title="Estado de la conexión">
+                <span class="status-dot"></span>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="tab-chat">💬 Chat</button>
+            <button class="tab-btn" data-tab="tab-selection">✍️ Selección</button>
+            <button class="tab-btn" data-tab="tab-document">📑 Documento</button>
+            <button class="tab-btn" data-tab="tab-data">📊 Datos/Excel</button>
+            <button class="tab-btn" data-tab="tab-layout">📐 Maquetación</button>
+            <button class="tab-btn" data-tab="tab-settings">⚙️ Ajustes</button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="tab-content-area">
+
+            <!-- TAB 1: Chat Interactivo en Tiempo Real -->
+            <section id="tab-chat" class="tab-pane active">
+                <div class="chat-context-bar">
+                    <label class="toggle-pill">
+                        <input type="checkbox" id="chkIncludeSelection" checked>
+                        <span>Incluir selección</span>
+                    </label>
+                    <label class="toggle-pill">
+                        <input type="checkbox" id="chkIncludeDoc">
+                        <span>Documento</span>
+                    </label>
+                    <label class="toggle-pill">
+                        <input type="checkbox" id="chkIncludeFile">
+                        <span id="lblFileBadge">Archivo (0)</span>
+                    </label>
+                </div>
+
+                <div class="chat-messages-container" id="chatMessages">
+                    <div class="chat-msg assistant">
+                        <div class="msg-avatar">✦</div>
+                        <div class="msg-content">
+                            <p><strong>¡Hola!</strong> Soy tu Asistente Editorial y de Ingeniería Documental en Word.</p>
+                            <p>Puedo ayudarte a redactar, auditar coherencia, cruzar datos de Excel, generar tablas y aplicar control de cambios.</p>
+                            <p><em>Directiva activa: Antes de modificar tu texto, te explicaré la propuesta y te haré preguntas cortas para que decidas exactamente qué aplicar.</em></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <textarea id="chatInput" placeholder="Escribe tu consulta o pide una modificación..." rows="2"></textarea>
+                    <div class="chat-input-actions">
+                        <button id="btnChatSend" class="btn-primary-send" title="Enviar consulta">➤</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Selección y Reescritura -->
+            <section id="tab-selection" class="tab-pane">
+                <div class="action-card">
+                    <div class="card-header">
+                        <label>Texto seleccionado en Word</label>
+                        <button id="btnReadSelection" class="btn-subtle" title="Leer texto marcado en Word">🔄 Leer selección</button>
+                    </div>
+                    <textarea id="selectionPreview" placeholder="Marca cualquier texto en tu documento de Word y pulsa 'Leer selección'..." rows="3"></textarea>
+                </div>
+
+                <div class="controls-grid">
+                    <div class="form-group">
+                        <label for="actionSelect">Acción rápida:</label>
+                        <select id="actionSelect">
+                            <option value="rewrite">🔄 Reescribir y perfeccionar</option>
+                            <option value="summarize">✂️ Resumir</option>
+                            <option value="expand">➕ Expandir y profundizar</option>
+                            <option value="grammar">📖 Corregir gramática y estilo</option>
+                            <option value="comment">💬 Sugerir como comentario</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="toneGroup">
+                        <label for="toneSelect">Tono / Registro:</label>
+                        <select id="toneSelect">
+                            <option value="formal">👔 Formal y elegante</option>
+                            <option value="academic">🎓 Académico y riguroso</option>
+                            <option value="executive">📊 Ejecutivo y conciso</option>
+                            <option value="persuasive">🎯 Persuasivo</option>
+                            <option value="plain">💡 Claro y sencillo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="selectionPrompt">Instrucción específica (opcional):</label>
+                    <input type="text" id="selectionPrompt" placeholder="Ej: Hazlo más breve, enfatiza la conclusión...">
+                </div>
+
+                <button id="btnRunSelection" class="btn-primary">✦ Procesar Selección</button>
+
+                <!-- Resultado de Selección -->
+                <div id="selectionResultContainer" class="result-box hidden">
+                    <div class="result-header">
+                        <span>Propuesta de mejora</span>
+                        <div class="result-actions">
+                            <button id="btnReplaceInDoc" class="btn-action-primary" title="Reemplazar texto en Word">Reemplazar en Word</button>
+                            <button id="btnInsertAfter" class="btn-action-secondary" title="Insertar a continuación">Insertar después</button>
+                        </div>
+                    </div>
+                    <div id="selectionResultText" class="result-body"></div>
+                </div>
+            </section>
+
+            <!-- TAB 3: Documento Completo & Track Changes -->
+            <section id="tab-document" class="tab-pane">
+                <div class="action-card">
+                    <div class="card-header">
+                        <label>Control del Documento</label>
+                        <span id="docWordCountBadge" class="badge-neutral">0 palabras</span>
+                    </div>
+                    <div class="button-row">
+                        <button id="btnReadFullDoc" class="btn-secondary">📖 Leer documento completo</button>
+                        <button id="btnToggleTrackChanges" class="btn-secondary">📝 Control de cambios: <strong id="lblTrackChangesStatus">Inactivo</strong></button>
+                    </div>
+                </div>
+
+                <div class="action-card">
+                    <label>Auditoría Integral de Manuscrito</label>
+                    <p class="card-desc">Detecta inconsistencias lógicas, contradicciones cuantitativas, vacíos argumentales y discordancias gramaticales en todo el archivo.</p>
+                    <button id="btnAuditDoc" class="btn-primary">🔍 Ejecutar Auditoría Editorial</button>
+                </div>
+
+                <div class="action-card">
+                    <label>Comentarios de Revisión</label>
+                    <div class="button-row">
+                        <button id="btnReadComments" class="btn-subtle">💬 Leer comentarios existentes</button>
+                    </div>
+                    <div id="commentsList" class="comments-preview-box"></div>
+                </div>
+
+                <!-- Resultado de Auditoría -->
+                <div id="auditResultContainer" class="result-box hidden">
+                    <div class="result-header">
+                        <span>Informe de Auditoría</span>
+                        <button id="btnInsertAuditSummary" class="btn-action-secondary">Insertar al final de Word</button>
+                    </div>
+                    <div id="auditResultText" class="result-body markdown-body"></div>
+                </div>
+            </section>
+
+            <!-- TAB 4: Datos, Excel & Gráficos -->
+            <section id="tab-data" class="tab-pane">
+                <div class="action-card">
+                    <label>Adjuntar Archivo de Contexto (Excel / CSV / PPTX / TXT)</label>
+                    <p class="card-desc">Permite cruzar cifras, tablas y datos externos con el documento de Word abierto.</p>
+                    <div class="file-drop-zone" id="fileDropZone">
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.txt,.json" style="display: none;">
+                        <span class="drop-icon">📁</span>
+                        <span id="dropZoneText">Arrastra un archivo aquí o haz clic para explorar</span>
+                    </div>
+                    <div id="attachedFileInfo" class="attached-file-pill hidden">
+                        <span id="attachedFileName">archivo.xlsx</span>
+                        <button id="btnRemoveAttachedFile" class="btn-remove-file">✕</button>
+                    </div>
+                </div>
+
+                <div class="action-card">
+                    <label>Generador e Inyector de Tablas APA 7</label>
+                    <p class="card-desc">Crea tablas nativas en Word con líneas horizontales formales, sin bordes verticales y notas al pie.</p>
+                    <div class="form-group">
+                        <input type="text" id="inputTableTitle" placeholder="Título de la tabla (ej: Nivel de rendimiento...)">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="inputTableData" placeholder="Pega datos separados por tabuladores, coma o JSON..." rows="3"></textarea>
+                    </div>
+                    <button id="btnInsertCustomTable" class="btn-primary">📊 Insertar Tabla APA 7 en Word</button>
+                </div>
+
+                <div class="action-card">
+                    <label>Generador de Gráficos Visuales</label>
+                    <p class="card-desc">Genera gráficos de barras o pastel vinculados a los datos analizados.</p>
+                    <div class="controls-grid">
+                        <select id="selectChartType">
+                            <option value="bar">Barras / Columnas</option>
+                            <option value="pie">Circular / Pastel</option>
+                            <option value="line">Líneas / Tendencia</option>
+                        </select>
+                        <button id="btnGenerateChart" class="btn-secondary">📈 Generar Gráfico en Word</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: Maquetación y Formato Avanzado -->
+            <section id="tab-layout" class="tab-pane">
+                <div class="action-card">
+                    <label>Configuración Rápida de Márgenes</label>
+                    <div class="layout-grid">
+                        <button class="btn-layout" data-margins="apa">
+                            <strong>APA 7ma Ed.</strong>
+                            <span>2.54 cm en los 4 lados</span>
+                        </button>
+                        <button class="btn-layout" data-margins="normal">
+                            <strong>Normal</strong>
+                            <span>3.0 cm izq/der, 2.5 cm sup/inf</span>
+                        </button>
+                        <button class="btn-layout" data-margins="narrow">
+                            <strong>Estrecho</strong>
+                            <span>1.27 cm en los 4 lados</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-card">
+                    <label>Orientación de Página</label>
+                    <div class="button-row">
+                        <button id="btnOrientationPortrait" class="btn-secondary">📄 Vertical</button>
+                        <button id="btnOrientationLandscape" class="btn-secondary">📑 Horizontal (Apaisada)</button>
+                    </div>
+                </div>
+
+                <div class="action-card">
+                    <label>Saltos de Sección y Estructura</label>
+                    <div class="button-row">
+                        <button id="btnInsertPageBreak" class="btn-subtle">Salto de página</button>
+                        <button id="btnInsertNextPageSection" class="btn-subtle">Sección: Página siguiente</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: Ajustes y Configuración Multi-IA -->
+            <section id="tab-settings" class="tab-pane">
+                <div class="action-card">
+                    <label for="selectProvider">Proveedor de Inteligencia Artificial:</label>
+                    <select id="selectProvider">
+                        <option value="gemini">Google Gemini (Oficial)</option>
+                        <option value="openai">OpenAI / ChatGPT (GPT-4o)</option>
+                        <option value="claude">Anthropic Claude (Sonnet 3.5)</option>
+                        <option value="local_ollama">Modelo Local (Ollama / LM Studio)</option>
+                    </select>
+                </div>
+
+                <div class="action-card">
+                    <label for="selectModel">Modelo de Lenguaje:</label>
+                    <select id="selectModel">
+                        <option value="gemini-3.8-flash">gemini-3.8-flash (Rápido y eficiente)</option>
+                        <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (Máxima profundidad)</option>
+                    </select>
+                </div>
+
+                <div class="action-card">
+                    <label for="inputApiKey">Clave de API (API Key):</label>
+                    <input type="password" id="inputApiKey" placeholder="Pega tu API Key del proveedor elegido...">
+                    <small class="help-text">La clave se guarda localmente en tu equipo.</small>
+                </div>
+
+                <div class="action-card" id="groupCustomEndpoint" style="display: none;">
+                    <label for="inputCustomEndpoint">Endpoint Personalizado (para Ollama / Local):</label>
+                    <input type="text" id="inputCustomEndpoint" placeholder="http://localhost:11434/v1">
+                </div>
+
+                <div class="action-card">
+                    <label for="inputAuthorName">Nombre del Revisor (para marcas y comentarios):</label>
+                    <input type="text" id="inputAuthorName" value="Renzo Chumacero" placeholder="Tu nombre o revisor...">
+                    <small class="help-text">Aparecerá en los comentarios y marcas de control de cambios de Word.</small>
+                </div>
+
+                <button id="btnSaveSettings" class="btn-primary">💾 Guardar Configuración</button>
+                <div id="settingsMessage" class="feedback-msg"></div>
+
+                <div class="status-summary">
+                    <p><strong>Estado del servidor local:</strong> <span id="lblServerStatus">Comprobando...</span></p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast-notification"></div>
+    </div>
+
+    <script src="taskpane.js"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp 
+          xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" 
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+          xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" 
+          xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+          xsi:type="TaskPaneApp">
+
+  <Id>b29788f4-6cb2-4796-9871-331289cf0821</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Renzo Chumacero Yanayaco</ProviderName>
+  <DefaultLocale>es-ES</DefaultLocale>
+  <DisplayName DefaultValue="Asistente Editorial Word" />
+  <Description DefaultValue="Asistente avanzado de redacción, análisis metodológico, auditoría de coherencia, comentarios y cruce de datos." />
+  <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png" />
+  <SupportUrl DefaultValue="https://localhost:3000" />
+  <AppDomains>
+    <AppDomain>https://localhost:3000</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Document" />
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://localhost:3000/taskpane.html" />
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Document">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="gemini.GetStarted.Title"/>
+            <Description resid="gemini.GetStarted.Description"/>
+            <LearnMoreUrl resid="gemini.GetStarted.LearnMoreUrl"/>
+          </GetStarted>
+          
+          <FunctionFile resid="gemini.taskpane.url" />
+
+          <!-- Ribbon Extension -->
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <CustomTab id="GeminiCustomTab">
+              <Group id="GeminiGroup">
+                <Label resid="gemini.group.label" />
+                <Icon>
+                  <bt:Image size="16" resid="gemini.icon16" />
+                  <bt:Image size="32" resid="gemini.icon32" />
+                  <bt:Image size="80" resid="gemini.icon80" />
+                </Icon>
+
+                <!-- Button to Open Taskpane -->
+                <Control xsi:type="Button" id="GeminiTaskpaneButton">
+                  <Label resid="gemini.button.label" />
+                  <Supertip>
+                    <Title resid="gemini.button.title" />
+                    <Description resid="gemini.button.desc" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="gemini.icon16" />
+                    <bt:Image size="32" resid="gemini.icon32" />
+                    <bt:Image size="80" resid="gemini.icon80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>GeminiTaskpane</TaskpaneId>
+                    <SourceLocation resid="gemini.taskpane.url" />
+                  </Action>
+                </Control>
+              </Group>
+              <Label resid="gemini.tab.label" />
+            </CustomTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="gemini.icon16" DefaultValue="https://localhost:3000/assets/icon-16.png" />
+        <bt:Image id="gemini.icon32" DefaultValue="https://localhost:3000/assets/icon-32.png" />
+        <bt:Image id="gemini.icon80" DefaultValue="https://localhost:3000/assets/icon-80.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="gemini.taskpane.url" DefaultValue="https://localhost:3000/taskpane.html" />
+        <bt:Url id="gemini.GetStarted.LearnMoreUrl" DefaultValue="https://localhost:3000" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="gemini.GetStarted.Title" DefaultValue="Gemini para Word" />
+        <bt:String id="gemini.tab.label" DefaultValue="Asistente Editorial" />
+        <bt:String id="gemini.group.label" DefaultValue="Herramientas IA" />
+        <bt:String id="gemini.button.label" DefaultValue="Abrir Asistente" />
+        <bt:String id="gemini.button.title" DefaultValue="Asistente Editorial" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="gemini.GetStarted.Description" DefaultValue="Tu copiloto de IA para redactar, analizar y formatear documentos en Microsoft Word." />
+        <bt:String id="gemini.button.desc" DefaultValue="Abre el panel lateral de Gemini para interactuar con el documento, reescribir selecciones y cruzar datos." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
