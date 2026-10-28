@@ -168,13 +168,6 @@ En el panel lateral de Word puedes seleccionar tu motor de inteligencia preferid
 
 ---
 
-## 🛡️ Cero Rastros de IA
-
-* **Autoría Humana Personalizable:** Puedes configurar el nombre del revisor en la pestaña **⚙️ Ajustes** (por defecto *Renzo Chumacero*). Todas las marcas de control de cambios y comentarios en Word llevarán tu nombre.
-* **Sin Huellas Digitales ni Marcas de Agua:** Ningún texto ni archivo contiene advertencias de bots, disclaimers artificiales ni comentarios de autoría de IA.
-
----
-
 ## 📄 Licencia
 
 Este proyecto se distribuye bajo la licencia **MIT**. Eres libre de usarlo, adaptarlo y compartirlo para investigaciones académicas, desarrollo de software o uso profesional.
